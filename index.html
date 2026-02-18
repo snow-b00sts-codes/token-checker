@@ -1,2 +1,746 @@
-i like you
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snowboosts — Shop</title>
 
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #050505;
+            --surface: #0a0a0a;
+            --surface-highlight: #121212;
+            --border: rgba(255, 255, 255, 0.05);
+            --primary: #00eaff;
+            --secondary: #7000ff;
+            --green: #00ff88;
+            --text-main: #ffffff;
+            --text-muted: #888888;
+            --radius: 16px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; cursor: none; }
+        html, body { height: 100%; scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* --- Cursor --- */
+        .cursor-dot, .cursor-outline {
+            position: fixed; top: 0; left: 0;
+            transform: translate(-50%, -50%);
+            border-radius: 50%; z-index: 9999; pointer-events: none;
+        }
+        .cursor-dot { width: 8px; height: 8px; background-color: var(--primary); }
+        .cursor-outline {
+            width: 40px; height: 40px;
+            border: 1px solid rgba(0, 234, 255, 0.5);
+            transition: width 0.2s, height 0.2s, background-color 0.2s;
+        }
+
+        /* --- Background --- */
+        .grain-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none; z-index: 9000;
+        }
+
+        .bg-grid {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -2; pointer-events: none;
+            mask-image: radial-gradient(circle at center, black 40%, transparent 100%);
+        }
+
+        .particle {
+            position: absolute; bottom: -10px;
+            width: 2px; height: 2px;
+            background: var(--primary);
+            border-radius: 50%; pointer-events: none;
+            box-shadow: 0 0 5px var(--primary);
+        }
+
+        @keyframes floatParticle {
+            0% { transform: translateY(0) translateX(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) translateX(50px); opacity: 0; }
+        }
+
+        /* --- Layout --- */
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 24px 80px;
+            position: relative;
+        }
+
+        /* --- Header / Nav --- */
+        header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 28px 0 24px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 0;
+            animation: fadeInUp 0.8s forwards;
+        }
+
+        .logo {
+            display: flex; align-items: center; gap: 12px;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 38px; height: 38px; border-radius: 50%;
+            border: 2px solid rgba(0,234,255,0.3);
+            box-shadow: 0 0 20px rgba(0,234,255,0.15);
+        }
+
+        .logo-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem; font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .logo-text span { color: var(--primary); }
+
+        .nav-links { display: flex; gap: 8px; }
+
+        .nav-link {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem; color: var(--text-muted);
+            text-decoration: none; padding: 8px 14px;
+            border-radius: 8px; border: 1px solid transparent;
+            transition: 0.2s;
+        }
+        .nav-link:hover { color: var(--primary); border-color: rgba(0,234,255,0.15); background: rgba(0,234,255,0.03); }
+        .nav-link.active { color: var(--primary); background: rgba(0,234,255,0.05); border-color: rgba(0,234,255,0.15); }
+
+        /* --- Hero --- */
+        .shop-hero {
+            text-align: center;
+            padding: 80px 0 60px;
+            position: relative;
+            animation: fadeInUp 0.9s forwards 0.1s; opacity: 0;
+        }
+
+        .shop-hero::before {
+            content: '';
+            position: absolute; z-index: -1;
+            top: 0; left: 50%; transform: translateX(-50%);
+            width: 70vw; height: 400px;
+            background: radial-gradient(circle at center, rgba(0,234,255,0.07) 0%, transparent 70%);
+            filter: blur(60px); pointer-events: none;
+        }
+
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(0,234,255,0.05);
+            border: 1px solid rgba(0,234,255,0.15);
+            padding: 6px 16px; border-radius: 999px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem; color: var(--primary);
+            margin-bottom: 28px;
+        }
+
+        .hero-badge-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 8px var(--green);
+            animation: pulse 2s infinite;
+        }
+
+        .hero-title {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 800;
+            letter-spacing: -2px;
+            background: linear-gradient(135deg, #fff 30%, rgba(255,255,255,0.4));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            line-height: 1.1; margin-bottom: 20px;
+        }
+
+        .hero-sub {
+            font-size: 1rem; color: var(--text-muted);
+            max-width: 500px; margin: 0 auto 40px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .hero-sub::before { content: "// "; color: var(--primary); }
+
+        /* --- Filter Tabs --- */
+        .filter-bar {
+            display: flex; align-items: center; justify-content: center;
+            gap: 10px; flex-wrap: wrap; margin-bottom: 60px;
+            opacity: 0; animation: fadeInUp 0.8s forwards 0.25s;
+        }
+
+        .filter-btn {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem; color: var(--text-muted);
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border);
+            padding: 8px 18px; border-radius: 8px;
+            cursor: none; transition: 0.2s;
+        }
+        .filter-btn:hover, .filter-btn.active {
+            color: var(--primary); border-color: rgba(0,234,255,0.25);
+            background: rgba(0,234,255,0.04);
+        }
+
+        /* --- Section Label --- */
+        .section-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem; letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            display: flex; align-items: center; gap: 15px;
+            opacity: 0; animation: fadeInUp 0.8s forwards 0.3s;
+        }
+        .section-label::after {
+            content: ""; flex-grow: 1; height: 1px;
+            background: linear-gradient(90deg, var(--border), transparent);
+        }
+
+        /* --- Product Grid --- */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            opacity: 0; animation: fadeInUp 0.8s forwards 0.4s;
+        }
+
+        .product-card {
+            background: rgba(20,20,20,0.6);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden; position: relative;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s cubic-bezier(0.2,0.8,0.2,1), border-color 0.3s;
+            display: flex; flex-direction: column;
+            text-decoration: none; color: inherit;
+            cursor: none;
+        }
+
+        .product-card::before {
+            content: "";
+            position: absolute; height: 100%; width: 100%;
+            top: 0; left: 0;
+            background: radial-gradient(600px circle at var(--mouse-x) var(--mouse-y), rgba(255,255,255,0.04), transparent 40%);
+            opacity: 0; transition: opacity 0.5s;
+            z-index: 2; pointer-events: none;
+        }
+        .product-card:hover::before { opacity: 1; }
+        .product-card:hover { transform: translateY(-8px); border-color: rgba(255,255,255,0.1); }
+
+        /* Accent border on top */
+        .product-card::after {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--card-accent, var(--primary)), transparent);
+            opacity: 0; transition: opacity 0.3s;
+        }
+        .product-card:hover::after { opacity: 1; }
+
+        .card-img-wrap {
+            position: relative; overflow: hidden;
+            height: 160px;
+            background: linear-gradient(135deg, var(--card-bg1, #0a0a14), var(--card-bg2, #0a140a));
+            display: flex; align-items: center; justify-content: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .card-icon {
+            font-size: 3.5rem;
+            filter: drop-shadow(0 0 20px var(--card-accent, var(--primary)));
+            transition: transform 0.4s cubic-bezier(0.175,0.885,0.32,1.275);
+            z-index: 1;
+        }
+        .product-card:hover .card-icon { transform: scale(1.15) rotate(-5deg); }
+
+        .card-glow {
+            position: absolute; inset: 0;
+            background: radial-gradient(circle at 50% 80%, var(--card-glow, rgba(0,234,255,0.08)), transparent 60%);
+            transition: opacity 0.3s;
+        }
+        .product-card:hover .card-glow { opacity: 1.5; }
+
+        .card-badge {
+            position: absolute; top: 12px; right: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem; font-weight: 700;
+            padding: 4px 10px; border-radius: 6px;
+            letter-spacing: 0.5px; z-index: 3;
+            text-transform: uppercase;
+        }
+        .badge-popular {
+            background: rgba(0,234,255,0.1); color: var(--primary);
+            border: 1px solid rgba(0,234,255,0.25);
+        }
+        .badge-hot {
+            background: rgba(255,100,50,0.1); color: #ff6432;
+            border: 1px solid rgba(255,100,50,0.25);
+        }
+        .badge-new {
+            background: rgba(0,255,136,0.1); color: var(--green);
+            border: 1px solid rgba(0,255,136,0.25);
+        }
+        .badge-sale {
+            background: rgba(112,0,255,0.15); color: #a860ff;
+            border: 1px solid rgba(112,0,255,0.3);
+        }
+
+        .card-body {
+            padding: 1.5rem; flex-grow: 1;
+            display: flex; flex-direction: column;
+            position: relative; z-index: 3;
+        }
+
+        .card-category {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .card-title {
+            font-size: 1.15rem; font-weight: 700;
+            color: #fff; margin-bottom: 10px;
+        }
+
+        .card-desc {
+            font-size: 0.88rem; color: var(--text-muted);
+            line-height: 1.6; flex-grow: 1; margin-bottom: 20px;
+        }
+
+        .card-meta {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .card-price {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.4rem; font-weight: 700;
+            color: var(--card-accent, var(--primary));
+        }
+
+        .card-price-old {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem; color: var(--text-muted);
+            text-decoration: line-through; margin-left: 8px;
+        }
+
+        .card-features {
+            display: flex; flex-direction: column; gap: 6px;
+            margin-bottom: 20px;
+        }
+
+        .feature-item {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 0.82rem; color: var(--text-muted);
+        }
+
+        .feature-item::before {
+            content: "▸";
+            color: var(--card-accent, var(--primary));
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .btn-buy {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 11px 20px; border-radius: 10px;
+            font-weight: 600; font-size: 0.9rem;
+            text-decoration: none;
+            background: var(--card-accent, var(--primary));
+            color: #000;
+            border: none; cursor: none;
+            position: relative; overflow: hidden;
+            transition: transform 0.2s, box-shadow 0.3s;
+        }
+
+        .btn-buy::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(circle at var(--x,50%) var(--y,50%), rgba(255,255,255,0.25), transparent 55%);
+            opacity: 0; transition: opacity 0.3s; pointer-events: none;
+        }
+        .btn-buy:hover::before { opacity: 1; }
+        .btn-buy:hover { transform: scale(1.02); box-shadow: 0 0 30px rgba(0,234,255,0.25); }
+        .btn-buy:active { transform: scale(0.97); }
+
+        /* --- Coming Soon Section --- */
+        .coming-soon-wrap {
+            margin-top: 5rem;
+            opacity: 0; animation: fadeInUp 0.8s forwards 0.5s;
+        }
+
+        .coming-soon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .coming-soon-card {
+            background: rgba(10,10,10,0.6);
+            border: 1px dashed rgba(255,255,255,0.06);
+            border-radius: var(--radius);
+            padding: 2rem;
+            display: flex; align-items: center; gap: 18px;
+            backdrop-filter: blur(10px);
+            transition: border-color 0.3s;
+        }
+        .coming-soon-card:hover { border-color: rgba(255,255,255,0.12); }
+
+        .cs-icon {
+            font-size: 2rem; flex-shrink: 0;
+            filter: grayscale(1); opacity: 0.4;
+        }
+
+        .cs-text-title {
+            font-size: 0.95rem; font-weight: 600; color: rgba(255,255,255,0.4);
+            margin-bottom: 4px;
+        }
+
+        .cs-text-desc {
+            font-size: 0.8rem; color: var(--text-muted);
+        }
+
+        .cs-tag {
+            margin-top: 8px;
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem; color: var(--text-muted);
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            padding: 3px 10px; border-radius: 4px;
+        }
+
+        /* --- Footer --- */
+        footer {
+            text-align: center; margin-top: 8rem; padding-bottom: 2rem;
+            color: var(--text-muted); font-size: 0.8rem;
+            opacity: 0; animation: fadeInUp 0.8s forwards 0.6s;
+            position: relative;
+        }
+
+        footer::before {
+            content: '';
+            position: absolute; z-index: -1;
+            bottom: -50px; left: 50%; transform: translateX(-50%);
+            width: 60%; height: 150px;
+            background: var(--primary);
+            filter: blur(80px); opacity: 0.12;
+            pointer-events: none; border-radius: 50% 50% 0 0;
+        }
+
+        footer a { color: var(--primary); text-decoration: none; }
+        footer a:hover { text-decoration: underline; }
+
+        /* --- Animations --- */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0,255,136,0.4); }
+            70% { box-shadow: 0 0 0 8px rgba(0,255,136,0); }
+            100% { box-shadow: 0 0 0 0 rgba(0,255,136,0); }
+        }
+
+        @media(max-width: 600px) {
+            .cursor-dot, .cursor-outline { display: none; }
+            * { cursor: auto; }
+            .hero-title { font-size: 2.5rem; }
+            .nav-links { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="cursor-dot"></div>
+<div class="cursor-outline"></div>
+<div class="grain-overlay"></div>
+<div class="bg-grid"></div>
+
+<div class="container">
+
+    <!-- Header -->
+    <header>
+        <a href="#" class="logo">
+            <img src="https://images-ext-1.discordapp.net/external/ewSmvI2AyJz72chzgJCQK0hQ2_Z6UzsWJLFFj2urrbc/%3Fsize%3D1024/https/cdn.discordapp.com/avatars/1430523534278393876/c651019c8f38e164d71bd6d95c71c347.png?format=webp&quality=lossless" class="logo-icon" alt="Logo">
+            <span class="logo-text">Snow<span>boosts</span></span>
+        </a>
+        <nav class="nav-links">
+            <a href="#" class="nav-link">Home</a>
+            <a href="#products" class="nav-link active">Shop</a>
+            <a href="#contact" class="nav-link">Contact</a>
+        </nav>
+    </header>
+
+    <!-- Hero -->
+    <div class="shop-hero">
+        <div class="hero-badge">
+            <div class="hero-badge-dot"></div>
+            Store Online · Instant Delivery
+        </div>
+        <h1 class="hero-title">Snowboosts</h1>
+        <p class="hero-sub">premium discord services &amp; bot solutions</p>
+    </div>
+
+    <!-- Filter -->
+    <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterProducts('all', this)">All Products</button>
+        <button class="filter-btn" onclick="filterProducts('boost', this)">Discord Boosts</button>
+        <button class="filter-btn" onclick="filterProducts('bot', this)">Bot Services</button>
+        <button class="filter-btn" onclick="filterProducts('custom', this)">Custom Dev</button>
+    </div>
+
+    <!-- Products -->
+    <div id="products" class="section-label">
+        <span>// AVAILABLE NOW</span>
+    </div>
+
+    <div class="product-grid" id="product-grid"></div>
+
+    <!-- Coming Soon -->
+    <div class="coming-soon-wrap">
+        <div class="section-label" style="opacity:1;">
+            <span>// COMING SOON</span>
+        </div>
+        <div class="coming-soon-grid" id="soon-grid"></div>
+    </div>
+
+    <footer>
+        <p>2024 © <a href="#">Snowboosts</a> · Powered by Sell Auth · All rights reserved</p>
+        <p style="margin-top:6px; font-family:'JetBrains Mono',monospace; font-size:0.72rem;">Instant delivery · Secure checkout · 24/7 support</p>
+    </footer>
+
+</div>
+
+<script>
+    // ─── Product Data ──────────────────────────────────────────────────────────
+    const products = [
+        {
+            id: 1, category: "boost",
+            icon: "⚡",
+            title: "Discord Server Boost",
+            category_label: "Discord Boost",
+            desc: "Boost your server to unlock exclusive perks, better audio quality, and more emoji slots. Fast delivery guaranteed.",
+            price: "$4.99",
+            oldPrice: "$7.99",
+            badge: "sale",
+            badgeText: "SALE",
+            accent: "#00eaff",
+            glow: "rgba(0,234,255,0.1)",
+            bg1: "#00111a", bg2: "#000a10",
+            features: ["Instant activation", "30-day duration", "Boosted perks", "Level 1–3 support"],
+            link: "https://snowboosts.mysellauth.com"
+        },
+        {
+            id: 2, category: "boost",
+            icon: "🚀",
+            title: "14x Server Boost Pack",
+            category_label: "Boost Pack",
+            desc: "Unlock Level 3 for your server with a full 14 boost pack. Max out your server's potential instantly.",
+            price: "$49.99",
+            badge: "popular",
+            badgeText: "POPULAR",
+            accent: "#00eaff",
+            glow: "rgba(0,234,255,0.1)",
+            bg1: "#00111a", bg2: "#000a10",
+            features: ["Level 3 unlocked", "100 custom emoji slots", "Max bitrate 384kbps", "Instant delivery"],
+            link: "https://snowboosts.mysellauth.com"
+        },
+        {
+            id: 3, category: "bot",
+            icon: "🤖",
+            title: "7Luxor Discord Bot",
+            category_label: "Bot Service",
+            desc: "Premium multi-purpose Discord bot with moderation, economy, music, and more. Built with Python by Infected & AyushYT.",
+            price: "$9.99",
+            badge: "hot",
+            badgeText: "HOT",
+            accent: "#ff6432",
+            glow: "rgba(255,100,50,0.1)",
+            bg1: "#1a0800", bg2: "#0f0500",
+            features: ["Auto-moderation", "Economy system", "Music commands", "SQLite database"],
+            link: "https://discord.gg/KtJ4AQ8UCv"
+        },
+        {
+            id: 4, category: "custom",
+            icon: "🛠️",
+            title: "Custom Bot Setup",
+            category_label: "Custom Dev",
+            desc: "Get a fully custom Discord bot tailored to your server's needs. Specify features and get a working bot delivered.",
+            price: "$29.99",
+            badge: "new",
+            badgeText: "NEW",
+            accent: "#00ff88",
+            glow: "rgba(0,255,136,0.1)",
+            bg1: "#001a0a", bg2: "#000f06",
+            features: ["Custom commands", "Your branding", "Python / JS", "Source code included"],
+            link: "https://snowboosts.mysellauth.com"
+        },
+        {
+            id: 5, category: "boost",
+            icon: "💎",
+            title: "Discord Nitro (1 Month)",
+            category_label: "Nitro",
+            desc: "Get Discord Nitro for a full month. Includes 2 server boosts, animated avatar, and full Nitro perks.",
+            price: "$9.99",
+            accent: "#a860ff",
+            glow: "rgba(168,96,255,0.1)",
+            bg1: "#0d0014", bg2: "#07000d",
+            features: ["2 free boosts included", "Animated avatar", "Custom tag", "500MB file uploads"],
+            link: "https://snowboosts.mysellauth.com"
+        },
+        {
+            id: 6, category: "custom",
+            icon: "🌐",
+            title: "Portfolio Website",
+            category_label: "Web Dev",
+            desc: "A sleek portfolio site like this one, built to your spec. Modern dark design with animations and responsive layout.",
+            price: "$19.99",
+            accent: "#00eaff",
+            glow: "rgba(0,234,255,0.08)",
+            bg1: "#00111a", bg2: "#000a10",
+            features: ["Custom design", "Mobile responsive", "Particle FX", "Fast delivery"],
+            link: "https://discord.com/users/1430523534278393876"
+        }
+    ];
+
+    const comingSoon = [
+        { icon: "🎵", title: "Music Bot Premium", desc: "High-quality music bot with Spotify support." },
+        { icon: "🛡️", title: "Security Audit Bot", desc: "Advanced server protection & raid alerts." },
+        { icon: "📊", title: "Analytics Dashboard", desc: "Server stats and growth tracking panel." },
+        { icon: "🎁", title: "Giveaway Bot Pro", desc: "Feature-rich giveaway management bot." }
+    ];
+
+    // ─── Render Products ────────────────────────────────────────────────────────
+    function renderProducts(filter = 'all') {
+        const grid = document.getElementById('product-grid');
+        grid.innerHTML = '';
+
+        const filtered = filter === 'all' ? products : products.filter(p => p.category === filter);
+
+        filtered.forEach((p, i) => {
+            const el = document.createElement('a');
+            el.href = p.link;
+            el.target = "_blank";
+            el.className = "product-card";
+            el.dataset.category = p.category;
+            el.style.setProperty('--card-accent', p.accent);
+            el.style.setProperty('--card-glow', p.glow);
+            el.style.setProperty('--card-bg1', p.bg1);
+            el.style.setProperty('--card-bg2', p.bg2);
+            el.style.animationDelay = `${i * 0.07}s`;
+
+            const badge = p.badge ? `<span class="card-badge badge-${p.badge}">${p.badgeText}</span>` : '';
+            const oldPrice = p.oldPrice ? `<span class="card-price-old">${p.oldPrice}</span>` : '';
+            const features = p.features.map(f => `<div class="feature-item">${f}</div>`).join('');
+
+            el.innerHTML = `
+                <div class="card-img-wrap">
+                    <div class="card-glow"></div>
+                    <div class="card-icon">${p.icon}</div>
+                    ${badge}
+                </div>
+                <div class="card-body">
+                    <div class="card-category">${p.category_label}</div>
+                    <div class="card-title">${p.title}</div>
+                    <div class="card-desc">${p.desc}</div>
+                    <div class="card-features">${features}</div>
+                    <div class="card-meta">
+                        <div>
+                            <span class="card-price">${p.price}</span>
+                            ${oldPrice}
+                        </div>
+                    </div>
+                    <div class="btn-buy">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        Buy Now
+                    </div>
+                </div>
+            `;
+            grid.appendChild(el);
+        });
+
+        // Re-bind spotlight
+        bindSpotlight();
+    }
+
+    // ─── Render Coming Soon ─────────────────────────────────────────────────────
+    const soonGrid = document.getElementById('soon-grid');
+    comingSoon.forEach(item => {
+        const el = document.createElement('div');
+        el.className = 'coming-soon-card';
+        el.innerHTML = `
+            <div class="cs-icon">${item.icon}</div>
+            <div>
+                <div class="cs-text-title">${item.title}</div>
+                <div class="cs-text-desc">${item.desc}</div>
+                <span class="cs-tag">COMING SOON</span>
+            </div>
+        `;
+        soonGrid.appendChild(el);
+    });
+
+    // ─── Filter ─────────────────────────────────────────────────────────────────
+    function filterProducts(cat, btn) {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderProducts(cat);
+    }
+
+    // ─── Cursor ─────────────────────────────────────────────────────────────────
+    const cursorDot     = document.querySelector('.cursor-dot');
+    const cursorOutline = document.querySelector('.cursor-outline');
+
+    window.addEventListener('mousemove', e => {
+        cursorDot.style.left = `${e.clientX}px`;
+        cursorDot.style.top  = `${e.clientY}px`;
+        cursorOutline.animate({ left: `${e.clientX}px`, top: `${e.clientY}px` }, { duration: 500, fill: "forwards" });
+    });
+
+    // ─── Spotlight ───────────────────────────────────────────────────────────────
+    function bindSpotlight() {
+        const interactables = document.querySelectorAll('.product-card, .btn-buy, .filter-btn');
+        document.querySelector('.container').onmousemove = e => {
+            for (const el of interactables) {
+                const rect = el.getBoundingClientRect();
+                el.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+                el.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+                el.style.setProperty('--x', `${e.clientX - rect.left}px`);
+                el.style.setProperty('--y', `${e.clientY - rect.top}px`);
+            }
+        };
+    }
+
+    // ─── Particles ───────────────────────────────────────────────────────────────
+    for (let i = 0; i < 20; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.left = Math.random() * 100 + 'vw';
+        p.style.animation = `floatParticle ${5 + Math.random() * 5}s linear infinite`;
+        p.style.animationDelay = -Math.random() * 5 + 's';
+        p.style.opacity = Math.random() * 0.5;
+        document.body.appendChild(p);
+    }
+
+    // ─── Init ────────────────────────────────────────────────────────────────────
+    renderProducts('all');
+</script>
+</body>
+</html>
