@@ -1,0 +1,23 @@
+[
+    {
+        "name": "Discord Token Generator",
+        "desc": "High quality fast token generator, pure requests.",
+        "price": "$40.00",
+        "link": "https://sellauth.com/",
+        "image": "https://raw.githubusercontent.com/snow-b00sts-codes/token-checker/refs/heads/main/assets/prod1.png"
+    },
+    {
+        "name": "Snow Boosts Ultra",
+        "desc": "Premium discord server boosting tool.",
+        "price": "$25.00/mo",
+        "link": "https://sellauth.com/",
+        "image": "https://raw.githubusercontent.com/snow-b00sts-codes/token-checker/refs/heads/main/assets/prod2.png"
+    },
+    {
+        "name": "Nitro Generator V2",
+        "desc": "Fully proxies-less nitro code generator.",
+        "price": "$15.00",
+        "link": "https://sellauth.com/",
+        "image": ""
+    }
+]
